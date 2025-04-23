@@ -1,0 +1,103 @@
+{
+    "config": {
+        "gridWidth": 20,
+        "gridHeight": 15,
+        "tileSize": 32,
+        "baseUpdateInterval": 1000,
+        "waveInterval": 120,
+        "enemyMoveInterval": 500,
+        "turretFireInterval": 1000,
+        "coreCoords": { "x": 0, "y": 7 },
+        "biomassHealCost": 5,
+        "biomassHealAmount": 25,
+        "biomassCoreRepairCost": 10,
+        "biomassCoreRepairAmount": 50,
+        "biomassMutateCost": 50,
+        "raidEncounterCheckInterval": 15000
+    },
+    "data": {
+        "buildings": {
+            "CORE": { "id": "CORE", "name": "Nexus Core", "cost": {}, "hp": 500, "type": "core", "description": "The heart of your base. Defend it.", "spriteColor": "0xFFFF00" },
+            "TURRET_MK1": {
+                "id": "TURRET_MK1", "name": "Mk1 Sentry", "cost": { "scrap": 50 }, "hp": 100,
+                "type": "turret", "damage": 10, "range": 4, "description": "Basic automated defense. Requires Biomass.",
+                "spriteColor": "0xFF0000",
+                "biomassUpkeep": 0.25
+            },
+            "FARM_HYDRO": { "id": "FARM_HYDRO", "name": "Hydroponics Pod", "cost": { "scrap": 30, "biomass": 10 }, "hp": 50, "type": "farm", "production": { "biomass": 0.5 }, "description": "Generates Biomass slowly.", "spriteColor": "0x00FF00", "biomassUpkeep": 0.05},
+            "SCAV_POST": { "id": "SCAV_POST", "name": "Scavenger Post", "cost": { "scrap": 20 }, "hp": 60, "type": "utility", "description": "Improves raid loot chances slightly.", "spriteColor": "0x0000FF" }
+        },
+        "survivorTemplates": [
+            { "name": "GRONK", "baseHp": 100 },
+            { "name": "FLEC", "baseHp": 80 },
+            { "name": "ZYLIA", "baseHp": 90 }
+        ],
+        "enemies": {
+            "SCRAPPER": { "id": "SCRAPPER", "name": "Scrapper Drone", "hp": 30, "speed": 1, "damage": 5, "spriteColor": "0x888888" },
+            "MUTANT_RAT": { "id": "MUTANT_RAT", "name": "Mutant Rat", "hp": 50, "speed": 1.5, "damage": 8, "spriteColor": "0x8B4513" },
+            "GLITCH_WISP": { "id": "GLITCH_WISP", "name": "Glitch Wisp", "hp": 20, "speed": 2, "damage": 3, "spriteColor": "0xFF00FF" }
+        },
+        "raidOutcomes": [
+            { "type": "loot", "items": [{ "type": "scrap", "min": 10, "max": 30 }], "chance": 0.4, "message": "Scavenging successful." },
+            { "type": "loot", "items": [{ "type": "biomass", "min": 5, "max": 15 }], "chance": 0.2, "message": "Harvested some organic matter." },
+            { "type": "loot", "items": [{ "type": "tech", "min": 1, "max": 1 }], "chance": 0.05, "message": "Discovered a rare tech schematic!" },
+            { "type": "loot", "items": [{ "type": "scrap", "min": 50, "max": 100 }, { "type": "biomass", "min": 10, "max": 20 }], "chance": 0.05, "message": "Hit a major cache!" },
+            { "type": "injury", "severity": "minor", "chance": 0.1, "message": "Survivor sustained minor injuries during the return." },
+            { "type": "injury", "severity": "major", "chance": 0.05, "message": "Survivor was badly wounded returning!" },
+            { "type": "mutation", "chance": 0.02, "message": "Lingering zone energies caused unexpected changes upon return." },
+            { "type": "death", "chance": 0.03, "message": "Survivor did not return from the zone. Presumed KIA." },
+            { "type": "nothing", "chance": 0.1, "message": "The zone yielded nothing upon final sweep." }
+        ],
+        "mutations": [
+             { "id": "MUT_STRENGTH", "name": "Bulging Biceps", "description": "+10% Damage, -10% Speed (Effect Placeholder)" },
+             { "id": "MUT_SPEED", "name": "Twitching Legs", "description": "+15% Speed, -10% Max HP (Effect Placeholder)" },
+             { "id": "MUT_REGEN", "name": "Oozing Pustules", "description": "Slow HP Regen (0.1/sec), -15% Max HP (Effect Placeholder)" },
+             { "id": "MUT_THICK_HIDE", "name": "Thick Hide", "description": "+20% Max HP, -5% Speed (Effect Placeholder)"}
+        ],
+        "raidZones": {
+            "WASTES": {
+                "id": "WASTES",
+                "name": "Irradiated Wastes",
+                "description": "Standard scavenging territory. Moderate scrap, low biomass.",
+                "baseDuration": [30, 60],
+                "lootModifiers": { "scrap": 1.0, "biomass": 0.5, "tech": 0.1 },
+                "encounterChance": 0.1
+            },
+            "RUINED_HOSPITAL": {
+                "id": "RUINED_HOSPITAL",
+                "name": "Ruined Hospital",
+                "description": "High chance of biomass and medical supplies, dangerous mutants.",
+                "baseDuration": [45, 75],
+                "lootModifiers": { "scrap": 0.6, "biomass": 1.5, "tech": 0.3 },
+                "encounterChance": 0.25
+            },
+            "TECH_BUNKER": {
+                "id": "TECH_BUNKER",
+                "name": "Collapsed Tech Bunker",
+                "description": "Rare tech finds possible, heavily defended by automated systems.",
+                 "baseDuration": [60, 90],
+                 "lootModifiers": { "scrap": 1.2, "biomass": 0.2, "tech": 1.0 },
+                 "encounterChance": 0.15
+            }
+        }
+    },
+    "soundData": {
+         "click": { "src": "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA", "volume": 0.6 },
+         "error": { "src": "data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAACABAAZGF0YQQAAAAAAP//AAAA", "volume": 0.5 },
+         "build": { "src": "data:audio/wav;base64,UklGRkoAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhBgAAAAC3/r3+t/63/rf+t/4=", "volume": 0.7 },
+         "hit": { "src": "data:audio/wav;base64,UklGRkAAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAY/5j/", "volume": 0.4 },
+         "raid_success": { "src": "data:audio/wav;base64,UklGRlAAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhBAAAAADr/o7+l/6O/q8=", "volume": 0.7 },
+         "turret_fire": { "src": "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA", "volume": 0.3, "pool": 5 },
+         "wave_announce": { "src": "data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAACABAAZGF0YQQAAAAAAP//AAAA", "volume": 0.9 },
+         "raid_fail": { "src": "data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAACABAAZGF0YQQAAAAAAP//AAAA", "volume": 0.7 },
+         "core_hit": { "src": "data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAACABAAZGF0YQQAAAAAAP//AAAA", "volume": 0.8 },
+         "game_over": { "src": "data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAACABAAZGF0YQQAAAAAAP//AAAA", "volume": 1.0 },
+         "enemy_death": { "src": "data:audio/wav;base64,UklGRkAAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAY/5j/", "volume": 0.5 },
+         "raid_start": { "src": "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA", "volume": 0.8 },
+         "heal": { "src": "data:audio/wav;base64,UklGRlAAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhBAAAAACAgICAgICAAAA=", "volume": 0.6 },
+         "mutate": { "src": "data:audio/wav;base64,UklGRkgAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhBAAAAAD+/v7+/v7+/v7+AAAA", "volume": 0.7 },
+         "power_down": { "src": "data:audio/wav;base64,UklGRkAAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAwMDAwMDA=", "volume": 0.5 },
+         "power_up": { "src": "data:audio/wav;base64,UklGRkAAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAACZmZmZmQ==", "volume": 0.5 },
+         "raid_event": { "src": "data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhBAAAAABEREREREREAAAA", "volume": 0.7 }
+    }
+}

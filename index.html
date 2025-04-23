@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VISCERAL RECLAIMER</title>
+    <!-- Using direct CDN links for libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.9/browser/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CRUELTY SQUAD INSPIRED GLITCHY/GROTESQUE STYLE --- */
+        /* (Your existing CSS styles remain here) */
+        :root {
+            --color-bg: #1a1a1a;
+            --color-text: #00ff00;
+            --color-accent1: #ff00ff;
+            --color-accent2: #ffff00;
+            --color-border: #444;
+            --color-glitch1: rgba(255, 0, 255, 0.7);
+            --color-glitch2: rgba(0, 255, 255, 0.7);
+            --font-main: 'VT323', monospace;
+            --font-title: 'Special Elite', cursive; /* Or VT323 if preferred */
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            font-family: var(--font-main);
+            font-size: 16px; /* Base size */
+        }
+
+        body::before { /* Scanlines overlay */
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+            z-index: 1000;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        #game-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            filter: contrast(1.1) brightness(1.1); /* Overall CRT effect */
+            animation: textGlitch 8s linear infinite alternate; /* Subtle global glitch */
+        }
+
+        #base-view {
+            flex-grow: 1;
+            height: 100%;
+            background-color: #050505;
+            position: relative;
+            overflow: hidden; /* Prevents canvas spill */
+            border-right: 4px double var(--color-border);
+        }
+
+        #base-canvas {
+             display: block; /* Remove extra space below canvas */
+             width: 100%;
+             height: 100%;
+             image-rendering: pixelated; /* Sharp pixels */
+        }
+
+        #ui-panel {
+            width: 350px;
+            min-width: 300px;
+            height: 100%;
+            background-color: #222;
+            border-left: 5px inset var(--color-accent1);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        /* --- UI Elements Styling --- */
+        .ui-section {
+            border: 2px solid var(--color-border);
+            padding: 10px;
+            background-color: rgba(0,0,0,0.3);
+            box-shadow: inset 0 0 5px var(--color-accent2);
+            animation: panelFlicker 5s infinite alternate;
+        }
+
+        .ui-section h2 {
+            font-family: var(--font-title);
+            color: var(--color-accent2);
+            margin: 0 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed var(--color-accent1);
+            text-transform: uppercase;
+            font-size: 1.5em;
+            text-shadow: 0 0 5px var(--color-accent2), 0 0 10px var(--color-accent1);
+            animation: textGlitch 5s linear infinite alternate;
+        }
+
+        .resource-display span, .survivor-info span, .build-option span, .log-message {
+            display: block; /* Each on new line */
+            margin-bottom: 3px;
+            font-size: 1.1em;
+        }
+        .resource-display strong, .survivor-info strong {
+            color: var(--color-accent2);
+            min-width: 80px;
+            display: inline-block;
+        }
+
+        button {
+            font-family: var(--font-main);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            border: 2px outset var(--color-border);
+            padding: 8px 15px;
+            font-size: 1.1em;
+            cursor: pointer;
+            text-transform: uppercase;
+            display: block;
+            width: 100%;
+            margin-bottom: 5px;
+            transition: all 0.1s ease;
+            position: relative; /* For glitch effect */
+        }
+        button:hover {
+            background-color: var(--color-accent1);
+            color: var(--color-bg);
+            border-color: var(--color-accent2);
+            text-shadow: 0 0 3px var(--color-bg);
+            animation: buttonHoverGlitch 0.2s infinite linear;
+        }
+        button:active {
+            border-style: inset;
+            background-color: var(--color-accent2);
+            color: var(--color-bg);
+        }
+        button:disabled {
+            color: #555;
+            border-color: #333;
+            cursor: not-allowed;
+            background-color: #111;
+            opacity: 0.7; /* Added for clarity */
+        }
+        button:disabled:hover {
+             background-color: #111;
+             color: #555;
+             animation: none;
+             text-shadow: none;
+             border-color: #333; /* Ensure border stays disabled */
+        }
+
+
+        .survivor-list li {
+            border: 1px dashed #444;
+            padding: 5px;
+            margin-bottom: 5px;
+            background-color: rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s; /* Smooth transition */
+        }
+        .survivor-list li:hover {
+            background-color: rgba(0,255,0,0.1);
+            border-color: var(--color-text);
+        }
+         .survivor-list li.selected {
+            background-color: rgba(255,255,0,0.2);
+            border-color: var(--color-accent2);
+         }
+
+        .survivor-status-idle { color: var(--color-text); }
+        .survivor-status-injured { color: #ff9933; } /* Made orange more visible */
+        .survivor-status-mutated { color: var(--color-accent1); font-style: italic; }
+        .survivor-status-raiding { color: #aaa; font-style: italic; } /* Slightly different color/style */
+        .survivor-status-paused { color: #00ffff; font-style: italic; } /* NEW for paused raids */
+        .survivor-status-dead { color: #ff4444; text-decoration: line-through; opacity: 0.6;}
+
+
+        .build-option {
+            border: 1px solid #444;
+            padding: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .build-option:hover {
+            background-color: rgba(0,255,0,0.1);
+            border-color: var(--color-text);
+        }
+        .build-option.selected {
+             background-color: rgba(0,255,0,0.2);
+             border-color: var(--color-text);
+        }
+         .build-option.unaffordable { /* NEW class for unaffordable */
+            opacity: 0.6;
+            border-color: #800 !important; /* Ensure override */
+            cursor: not-allowed;
+         }
+        .build-option small {
+            font-size: 0.9em;
+            color: #aaa;
+            display: block;
+            margin-top: 2px; /* Spacing */
+        }
+
+        #game-log {
+            height: 150px;
+            overflow-y: scroll;
+            background-color: #111;
+            border: 1px inset #333;
+            padding: 5px;
+            font-size: 0.9em;
+        }
+        .log-message { margin-bottom: 2px; }
+        .log-warning { color: var(--color-accent2); }
+        .log-danger { color: #ff4444; }
+        .log-success { color: #44ff44; }
+        .log-info { color: #aaa; }
+        .log-raid { color: #00ffff; } /* NEW log type for raid events */
+
+
+        /* --- Modal --- */
+        #modal-overlay {
+            position: fixed; /* Use fixed to cover entire viewport */
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.85); /* Darker overlay */
+            z-index: 100;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            padding: 20px; /* Add padding for smaller screens */
+            box-sizing: border-box;
+        }
+        #modal-content {
+            background-color: var(--color-bg);
+            border: 5px double var(--color-accent1);
+            padding: 30px;
+            min-width: 300px;
+            max-width: 600px; /* Limit max width */
+            width: 90%; /* Responsive width */
+            max-height: 80vh; /* Limit max height */
+            overflow-y: auto;
+            box-shadow: 0 0 30px var(--color-accent2);
+            animation: modalFlicker 0.5s infinite alternate;
+            text-align: center; /* Default center alignment */
+        }
+        #modal-content h3 {
+            font-family: var(--font-title);
+            color: var(--color-accent2);
+            margin: 0 0 20px 0;
+            font-size: 1.8em;
+            text-shadow: 0 0 5px var(--color-accent2), 0 0 10px var(--color-accent1);
+        }
+        #modal-message {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            line-height: 1.6;
+            white-space: pre-wrap; /* Preserve line breaks from JS */
+            text-align: left; /* Left align message/buttons typically better */
+        }
+        #modal-message button { /* Style buttons inside the modal */
+             margin-bottom: 10px;
+             text-align: left; /* Align button text left */
+             padding: 10px 15px; /* Slightly larger padding */
+             font-size: 1em;
+        }
+
+
+        /* --- Glitch Animations --- */
+        /* (Keep existing animations: flicker, textGlitch, panelFlicker, buttonHoverGlitch, modalFlicker, shake) */
+        @keyframes flicker { /* ... */ }
+        @keyframes textGlitch { /* ... */ }
+        @keyframes panelFlicker { /* ... */ }
+        @keyframes buttonHoverGlitch { /* ... */ }
+        @keyframes modalFlicker { /* ... */ }
+        @keyframes shake { /* ... */ }
+
+        /* Simple sprite placeholders for Pixi */
+        /* (Keep existing sprite styles) */
+        .sprite-core { background-color: var(--color-accent2); border: 2px solid #fff; }
+        .sprite-turret { background-color: #f00; border: 1px solid #fff; }
+        .sprite-farm { background-color: #0f0; border: 1px solid #fff; }
+        .sprite-barracks { background-color: #00f; border: 1px solid #fff; }
+        .sprite-enemy { background-color: var(--color-accent1); border-radius: 50%; }
+
+         /* Visual style for inactive building overlay in Pixi (applied via tint now) */
+         /* .pixi-building-inactive { background-color: rgba(255, 0, 0, 0.4); } */
+
+         @keyframes flicker {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.8; }
+        }
+
+        @keyframes textGlitch {
+          0% { transform: translate(0, 0); text-shadow: 0 0 5px var(--color-accent2), 0 0 10px var(--color-accent1); }
+          2% { transform: translate(-1px, 1px) skewX(-3deg); text-shadow: 2px 0px 3px var(--color-glitch1), -2px 0px 3px var(--color-glitch2); }
+          4% { transform: translate(1px, -1px) skewX(2deg); text-shadow: -2px 0px 3px var(--color-glitch1), 2px 0px 3px var(--color-glitch2); }
+          6% { transform: translate(0, 0); text-shadow: 0 0 5px var(--color-accent2), 0 0 10px var(--color-accent1); }
+          100% { transform: translate(0, 0); text-shadow: 0 0 5px var(--color-accent2), 0 0 10px var(--color-accent1); }
+        }
+
+        @keyframes panelFlicker {
+            0%, 100% { box-shadow: inset 0 0 5px var(--color-accent2); }
+            48% { box-shadow: inset 0 0 5px var(--color-accent2); }
+            50% { box-shadow: inset 0 0 10px var(--color-accent1), 0 0 5px var(--color-accent2); opacity: 0.95; }
+            52% { box-shadow: inset 0 0 5px var(--color-accent2); }
+        }
+
+        @keyframes buttonHoverGlitch {
+          0% { transform: translate(0, 0); }
+          25% { transform: translate(2px, 1px) skewX(-5deg); }
+          50% { transform: translate(-1px, -1px) skewX(3deg); }
+          75% { transform: translate(1px, 2px) skewX(5deg); }
+          100% { transform: translate(0, 0); }
+        }
+
+        @keyframes modalFlicker {
+            0%, 100% { opacity: 1; box-shadow: 0 0 30px var(--color-accent2); }
+            49% { opacity: 1; box-shadow: 0 0 30px var(--color-accent2); }
+            50% { opacity: 0.9; box-shadow: 0 0 40px var(--color-accent1), 0 0 15px var(--color-accent2); }
+            51% { opacity: 1; box-shadow: 0 0 30px var(--color-accent2); }
+        }
+
+        /* Simple shake animation */
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+          20%, 40%, 60%, 80% { transform: translateX(3px); }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="base-view">
+            <canvas id="base-canvas"></canvas>
+        </div>
+        <div id="ui-panel">
+            <div class="ui-section">
+                <h2>STATUS://RESOURCES</h2>
+                <div id="resource-display" class="resource-display">
+                    <span><strong>SCRAP:</strong> <span id="res-scrap">0</span></span>
+                    <span><strong>BIOMASS:</strong> <span id="res-biomass">0</span></span>
+                    <span><strong>TECH:</strong> <span id="res-tech">0</span></span>
+                </div>
+            </div>
+
+            <div class="ui-section">
+                <h2>SURVIVORS://ROSTER</h2>
+                <ul id="survivor-list" class="survivor-list" style="list-style: none; padding: 0; margin: 0;">
+                    <!-- Survivor items will be added here by JS -->
+                </ul>
+                <!-- Survivor Info/Actions Area -->
+                <div id="survivor-actions" style="margin-top: 10px; border-top: 1px dashed var(--color-border); padding-top: 10px;">
+                    <div id="survivor-details" style="margin-bottom: 10px; font-size: 0.9em; color: #aaa; min-height: 2.5em; /* Reserve space */ ">Select a survivor.</div>
+                    {/* <!-- NEW Buttons --> */}
+                    <button id="heal-button" style="margin-bottom: 5px;" disabled>HEAL (BIOMASS)</button>
+                    <button id="mutate-button" style="margin-bottom: 10px;" disabled>MUTATE (BIOMASS)</button>
+                </div>
+                 {/* <!-- Changed Button Text --> */}
+                <button id="raid-button" disabled>SELECT RAID ZONE</button>
+                 <small>Select an IDLE survivor first.</small>
+            </div>
+
+            <div class="ui-section">
+                <h2>CONSTRUCT://BASE</h2>
+                <div id="build-options">
+                    <!-- Build options will be added here by JS -->
+                </div>
+                 <small>Select build option, then click on grid.</small>
+                 <div id="selected-tile-info" style="margin-top: 10px; font-size: 0.9em; color: #aaa;">Select a tile on the grid.</div>
+            </div>
+
+            <div class="ui-section">
+                 <h2>SYSTEM LOG://</h2>
+                 <div id="game-log">
+                     <!-- Log messages appear here -->
+                 </div>
+            </div>
+            <div class="ui-section">
+                <h2>DEFCON://WAVE <span id="wave-number">0</span></h2>
+                <div id="wave-info">Incoming: <span id="wave-timer">N/A</span>s</div>
+                <div>Core HP: <span id="core-hp">100</span>%</div>
+                 {/* <!-- NEW Button --> */}
+                <button id="repair-core-button" style="margin-top: 10px;" disabled>REPAIR CORE (BIOMASS)</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="modal-overlay">
+        <div id="modal-content">
+            <h3 id="modal-title">EVENT</h3>
+            <div id="modal-message">Details here...</div>
+            {/* <!-- Button text will be changed dynamically --> */}
+            <button id="modal-close-button">ACKNOWLEDGE</button>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+
+    <!-- 2. Load the other modules to populate GAME -->
+    <script src="utils.js"></script>
+    <script src="audio.js"></script>
+    <script src="graphics.js"></script>
+    <script src="ui_manager.js"></script>
+    <script src="actor_manager.js"></script>
+    <script src="building_manager.js"></script> 
+
+</body>
+</html>
